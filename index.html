@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Major+Mono+Display&family=Roboto:wght@300&display=swap" rel="stylesheet">
+</head>
+  <body>
+    <main>
+        <div id="clocks-container" class="centered"> 
+            <svg 
+                id="clocks"
+                width="30rem"
+                xmlns="http://www.w3.org/2000/svg"
+            >
+                <defs>
+                    <filter id="lightOn">
+                        <feGaussianBlur stdDeviation="1" result="blur1"/>
+                        <feGaussianBlur stdDeviation="2" result="blur2"/>
+                        <feBlend in="blur1" in2="blur2" mode="multiply" result="blur"/>
+                        <feMerge>
+                            <feMergeNode in="blur"/> 
+                            <feMergeNode in="SourceGraphic"/>
+                        </feMerge>
+                    </filter>
+                </defs>
+                <!-- <rect x="0" y="0" width="400" height="400" fill="black"/> -->
+                <!-- <rect x="10" y="10" width="10" height="10" stroke="blue"/>
+                <rect x="30" y="10" width="10" height="10" stroke="blue"/>
+                <text x="15" y="15">A</text>
+                <text x="35" y="15">b</text>
+                <text x="55" y="15">c</text>
+                <text x="75" y="15">d</text>
+                <text x="95" y="15">e</text>
+                <text x="115" y="15">f</text>
+                <text x="135" y="15">g</text>
+                <text x="155" y="15">h</text>
+                <text x="175" y="15">i</text>
+                <text x="195" y="15">j</text>
+                <text x="15" y="35">k</text>
+                <text x="35" y="35">l</text>
+                <text x="55" y="35">m</text>
+                <text x="75" y="35">n</text>
+                <text x="95" y="35">o</text>
+                <text x="115" y="35">p</text>
+                <text x="135" y="35">q</text>
+                <text x="155" y="35">r</text>
+                <text x="175" y="35">s</text>
+                <text x="195" y="35">t</text>
+                <text x="15" y="55">u</text>
+                <text x="35" y="55">v</text>
+                <text x="55" y="55">w</text>
+                <text x="75" y="55">x</text>
+                <text x="95" y="55">y</text>
+                <text x="115" y="55">z</text>
+                <text x="135" y="60" font-size="15" class="symbol">?</text>
+                <text x="155" y="60" font-size="15" class="symbol">!</text>
+                <text x="175" y="55">-</text>
+                <text x="195" y="60" font-size="15" class="symbol">'</text> -->
+            </svg>
+            <button id="dismiss-button" class="button">
+                Dismiss
+            </button>
+        </div>
+        <label class="invisible error-message" id="text-input-error-message">
+            Error message
+        </label>
+        <div id="controls" class="centered">
+            <input 
+                id="text-input" 
+                type="text"
+                placeholder="Your text..."
+            ></input>
+            <!--input type="time" has unreliable validation and different look across browsers, not useful-->
+            <div id="time-input">
+                <select id="time-hours">
+                    <option value="1">1</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                    <option value="5">5</option>
+                    <option value="6">6</option>
+                    <option value="7">7</option>
+                    <option value="8">8</option>
+                    <option value="9">9</option>
+                    <option value="10">10</option>
+                    <option value="11">11</option>
+                    <option value="12">12</option>
+                </select>
+                <select id="time-minutes">
+                    <option value="0">00</option>
+                    <option value="5">05</option>
+                    <option value="10">10</option>
+                    <option value="15">15</option>
+                    <option value="20">20</option>
+                    <option value="25">25</option>
+                    <option value="30">30</option>
+                    <option value="35">35</option>
+                    <option value="40">40</option>
+                    <option value="45">45</option>
+                    <option value="50">50</option>
+                    <option value="55">55</option>
+                </select>
+                <span class="pseudo-button-container">
+                    <button class="pseudo-button" id="time-am-toggle">
+                        AM
+                    </button>
+                </span>
+            </div>
+            <div id="set-buttons">
+                <button id="set-now" class="button">Set now</button>
+                <button id="set-at-time" class="button">Set to time</button>
+            </div>
+        </div>
+    </main>
+    <script src="rxjs.umd.min.js"></script>
+    <script src="index.js"></script>
+  </body>
+</html>

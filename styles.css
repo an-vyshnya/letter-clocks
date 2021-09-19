@@ -1,0 +1,156 @@
+:root {
+    --primary-text-color: rgb(244, 244, 244);
+    --secondary-text-color: rgba(244, 244, 244, 0.5);
+    --error-color: rgb(204, 49, 46);
+    --border-color: var(--primary-text-color);
+    --background-color: #BDBDBD;
+
+    --svg-text-off-color: #302E38;
+    --svg-text-on-color: #F4F4F6;
+}
+
+html, body {
+    height: 100%;
+    margin: 0;
+    background-color: var(--background-color);
+    font-family: Tahoma, sans-serif;
+}
+
+main {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-around;        
+}
+
+div {
+    display: block;
+}
+
+input[type=text] {
+    width: 120%;
+    background-color: rgba(0, 0, 0, 0);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    padding: 4px;
+    color: var(--primary-text-color);
+    outline: none;
+    transition-duration: 0.3s;
+}
+
+input[type=text]:focus {
+    background-color: rgba(0, 0, 0, 0.1);
+}
+
+input[type=text]:invalid {
+    border-color: var(--error-color);
+    color: var(--error-color);
+}
+
+::placeholder {
+    color: var(--secondary-text-color);
+}
+
+select {
+    background-color: rgba(0, 0, 0, 0);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    padding: 4px;
+    color: var(--primary-text-color);
+    outline: none;
+}
+
+/* For Firefox, to make options readable */
+option {
+    color:rgba(0, 0, 0, 0.5);
+}
+
+.invisible.error-message {
+    color: transparent
+}
+
+.error-message {
+    font-size: smaller;
+    color: var(--error-color);
+}
+
+.centered {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.button {
+    width: 10rem;
+    background-color: rgba(0, 0, 0, 0);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    padding: 4px;
+    color: var(--primary-text-color);
+    transition-duration: 0.3s;
+}
+
+.button:hover {
+    background-color: rgba(0, 0, 0, 0.25);
+}
+
+.button:active {
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
+/* Transparent borders to imitate the layout of button without its fuctionality */
+.pseudo-button {
+    width: min-content;
+    background-color: rgba(0, 0, 0, 0);
+    border: 1px solid rgba(0, 0, 0, 0);
+    border-radius: 4px;
+    color: var(--primary-text-color);
+    outline: none;
+    /* selects by default have 1px larger padding than buttons,
+       this is to align with them */
+    padding: 5px;
+}
+
+.pseudo-button-container {
+    position: absolute;
+    left: calc(50% + 3.5rem);
+    color: var(--primary-text-color)
+}
+
+#controls {
+    flex : 2;
+    justify-content: space-between;
+    padding-bottom: 1rem;
+}
+
+#clocks-container {
+    flex-basis: 80%;
+    justify-content: space-evenly;
+}
+
+.snihy {
+    background-color: turquoise;
+}
+
+/* SVG */
+
+svg > text {
+    font-family: 'Major Mono Display', monospace;
+    /* vscode disagrees, but it is a valid property for svg */
+    dominant-baseline: middle;
+    text-anchor: middle;
+    fill: var(--svg-text-off-color);
+    transition-duration: 1s;
+    transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+svg > text.symbol {
+    font-family: 'Roboto', sans-serif;
+    dominant-baseline: auto;
+}
+
+.lightOn {
+    fill: var(--svg-text-on-color);
+    filter: url(#lightOn);
+}
