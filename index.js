@@ -241,7 +241,7 @@ function time2lights(n, time) {
     const isHalf = minutes === 30;
     const isOclock = minutes === 0;
     const isTo = [35, 40, 45, 50, 55].includes(minutes);
-    const isPast = [5, 10, 15, 20, 25].includes(minutes);
+    const isPast = [5, 10, 15, 20, 25, 30].includes(minutes);
 
     const isHour = (h) => isTo ? (hours + 1 === h) : hours === h;
     return [
