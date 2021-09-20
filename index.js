@@ -1,30 +1,8 @@
 //
-// UI interactions section (controls, DOM, time-management)
+// Utils
 //
-const textInput = document.getElementById("text-input");
-const textInputError = document.getElementById("text-input-error-message");
-const timeHours = document.getElementById("time-hours");
-const timeMinutes = document.getElementById("time-minutes");
-const timeAmToggle = document.getElementById("time-am-toggle");
 
-const setNowButton = document.getElementById("set-now");
-const setAtTimeButton = document.getElementById("set-at-time");
-const dismissButton = document.getElementById("dismiss-button");
-
-// Helper functions
-function textValidation(text) {
-    if (text.length > 10) {
-        return {
-            isValid: false,
-            errorMessage: "Your text is too long"
-        }
-    } else {
-        return {
-            isValid: true
-        }
-    }
-}
-
+// Time helpers
 function date2hoursMinutesAm(date) {
     const hours = date.getHours();
     const minutes = date.getMinutes();
@@ -45,6 +23,7 @@ function roundTimeMinutes(time) {
 }
 
 function time2string(time) {
+	// To encode time in a string key, format doesn't matter 
     return time.hours + ":" + time.minutes + "." + time.am
 }
 
@@ -53,159 +32,36 @@ function getCurrentTimeRounded() {
     return roundTimeMinutes(date2hoursMinutesAm(now))
 }
 
-// State set up
-// Clocks mode
-const TIME_MODE = 0;
-const TEXT_MODE = 1;
-
-let displayMode = TIME_MODE;
-
-function setDisplayMode(mode) {
-    if ([TIME_MODE, TEXT_MODE].includes(mode)) {
-        displayMode = mode;
+// Validation helpers
+function textValidation(text) {
+    if (text.length > 10) {
+        return {
+            isValid: false,
+            errorMessage: "Your text is too long"
+        }
+    } else {
+        return {
+            isValid: true
+        }
     }
-}
-
-function getDisplayMode() {
-    return displayMode
-}
-
-// Notifications storage
-const notifications = {};
-
-function addNotification(text, time) {
-    const key = time2string(time);
-    notifications[key] = text;
-}
-
-function getCurrentNotification() {
-    const key = time2string(roundTimeMinutes(getCurrentTimeRounded()));
-    return notifications[key];
 }
 
 //
-// Controls
-// 
-
-function getTimeInput() {
-    const hours = timeHours.options[timeHours.selectedIndex].value;
-    const minutes = timeMinutes.options[timeMinutes.selectedIndex].value;
-    const am = timeAmToggle.innerText;
-    return {hours, minutes, am}
-}
-
-rxjs.fromEvent(textInput, "input").subscribe(
-    () => {
-        const validation = textValidation(textInput.value);
-        if (validation.isValid) {
-            textInput.setCustomValidity("");
-            textInputError.classList.add("invisible");
-        } else {
-            textInput.setCustomValidity("invalid");
-            textInputError.innerText = validation.errorMessage;
-            textInputError.classList.remove("invisible");
-        }
-    }
-);
-
-rxjs.fromEvent(timeAmToggle, "click").subscribe(
-    () => {
-        if (timeAmToggle.innerText === "AM"){
-            timeAmToggle.innerText = "PM"
-        } else {
-            timeAmToggle.innerText = "AM"
-        }
-    }
-);
-
-rxjs.fromEvent(dismissButton, "click").subscribe(
-    () => setDisplayMode(TIME_MODE)
-);
-
-rxjs.fromEvent(setAtTimeButton, "click").subscribe(
-    () => {
-        const text = textInput.value;
-        if (textValidation(text).isValid) {
-            addNotification(text, getTimeInput())
-        }
-    }
-);
-
-const timerEach5Mins$ = 
-    rxjs.interval(1000)
-    .pipe(
-        rxjs.bufferCount(1), //60
-        rxjs.bufferCount(1), //5
-        rxjs.map(() => {
-            const displayRegulal = () => {
-                if (getDisplayMode() === TIME_MODE) {
-                    console.log("regular, time");
-                    return {mode: TIME_MODE, time: getCurrentTimeRounded()}
-                } else {
-                    console.log("regular, nop");
-                    return {}
-                }
-            };
-            const nextNotification = getCurrentNotification();
-            if (typeof nextNotification === "undefined") {
-                return displayRegulal();
-            } else {
-                setDisplayMode(TEXT_MODE);
-                console.log("new note!");
-                return {mode: TEXT_MODE, text: nextNotification}
-            }
-        })
-    );
-
-const setNow$ = 
-    rxjs.fromEvent(setNowButton, "click")
-    .pipe(
-        rxjs.map(() => textInput.value),
-        rxjs.filter(text => textValidation(text).isValid),
-        rxjs.map(text => {
-            setDisplayMode(TEXT_MODE);
-            return {mode: TEXT_MODE, text: text}
-        })
-    );
-
-// Here we accumulate all changes, filter out repetitions and
-// the result is an object for SVG generation to work with of form
-// {type : TEXT|TIME, text? : string, time? : time_format_string}
-// rxjs.merge(timerEach5Mins$, setNow$)
-//     .pipe(
-//         rxjs.distinctUntilChanged((previous, current) => {
-//             const ptime = previous.time;
-//             const ctime = current.time;
-//             return (
-//                 previous.mode === current.mode
-//                 && ptime.hours === ctime.hours
-//                 && ptime.minutes === ctime.minutes
-//                 && ptime.am === ctime.am
-//             )
-//         })
-//     )
-//     .subscribe(
-//         x => {
-//             console.log(x);
-//             time2lights(n, {hours:"12", minutes:"00", am:"AM"}).forEach((line, i) => {
-//                 setRowLights(clocks, i, line);
-//             })
-//         }
-//     );
-
-//
-// SVG generation
+// Letter matrix generation functions
 //
 
-const allowedSymbols = "abcdefghijklmnopqrstuvwxyz?!&%#$2+-'<>1234567890";
-
-// Helper functions
-function coords2id(x, y) {
-    return x + ":" + y
+function getAllowedSymbols() {
+	return "abcdefghijklmnopqrstuvwxyz?!&%#$2+-'<>1234567890";
 }
 
 function getRandomSymbol() {
+	const allowedSymbols = getAllowedSymbols();
     return (allowedSymbols[Math.ceil(Math.random() * (allowedSymbols.length - 1))])
+}
+
+function coords2id(x, y) {
+	// To encode x and y in string id, format doesn't matter
+    return x + ":" + y
 }
 
 // Predefined time matrix operations
@@ -259,11 +115,10 @@ function time2lights(n, time) {
     ]
 }
 
-// Drawing and udpates
 function setupClocks(id, n) {
     return {
         clocks: document.getElementById(id),
-        n: Math.min(n, 11),
+        n: Math.max(n, 11),
         pxPerCell: 10
     }
 }
@@ -308,12 +163,15 @@ function drawRow(clocks, y, letters) {
 }
 
 function drawCell(clocks, x, y, letter) {
-    const idx2px = (idx) => (idx * 2 * clocks.pxPerCell) + (clocks.pxPerCell * 1.5);
+	// These charachters are ugly in the selected font so we use another font for them
+	// That requires another alignment and font-size
     const symbols = ["?", "!", "'"];
     const isSymbol = symbols.includes(letter);
+	const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+
+	const idx2px = (idx) => (idx * 2 * clocks.pxPerCell) + (clocks.pxPerCell * 1.5);
     const xpx = idx2px(x);
     const ypx = idx2px(y) + (isSymbol ? 5 : 0);
-    const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
     text.setAttribute("x", xpx);
     text.setAttribute("y", ypx);
     text.setAttribute("id", coords2id(x, y));
@@ -325,12 +183,126 @@ function drawCell(clocks, x, y, letter) {
     clocks.clocks.appendChild(text);
 }
 
-// 
+// Entry point
 
-// 11 is minimum, otherwise time phrases won't fit
-const n = 11;
+// State set up
+// Clocks mode
+const TIME_MODE = 0;
+const TEXT_MODE = 1;
 
-const clocks = setupClocks("clocks", n);
+let displayMode = TIME_MODE;
+
+function setDisplayMode(mode) {
+    if ([TIME_MODE, TEXT_MODE].includes(mode)) {
+        displayMode = mode;
+    }
+}
+
+function getDisplayMode() {
+    return displayMode
+}
+
+// Notifications storage
+const notifications = {};
+
+function addNotification(text, time) {
+    const key = time2string(time);
+    notifications[key] = text;
+}
+
+function getNotification() {
+    const key = time2string(getCurrentTimeRounded());
+    return notifications[key];
+}
+
+const textInput = document.getElementById("text-input");
+const textInputError = document.getElementById("text-input-error-message");
+const timeHours = document.getElementById("time-hours");
+const timeMinutes = document.getElementById("time-minutes");
+const timeAmToggle = document.getElementById("time-am-toggle");
+const setNowButton = document.getElementById("set-now");
+const setAtTimeButton = document.getElementById("set-at-time");
+const dismissButton = document.getElementById("dismiss-button");
+
+// Number of elements in row/column. 11 is minimum, otherwise time phrases don't fit
+const N = 11;
+
+const clocks = setupClocks("clocks", N);
+
+rxjs.fromEvent(textInput, "input").subscribe(
+    () => {
+        const validation = textValidation(textInput.value);
+        if (validation.isValid) {
+            textInput.setCustomValidity("");
+            textInputError.classList.add("invisible");
+        } else {
+            textInput.setCustomValidity("invalid");
+            textInputError.innerText = validation.errorMessage;
+            textInputError.classList.remove("invisible");
+        }
+    }
+);
+
+rxjs.fromEvent(timeAmToggle, "click").subscribe(
+    () => {
+        if (timeAmToggle.innerText === "AM"){
+            timeAmToggle.innerText = "PM"
+        } else {
+            timeAmToggle.innerText = "AM"
+        }
+    }
+);
+
+rxjs.fromEvent(dismissButton, "click").subscribe(
+    () => setDisplayMode(TIME_MODE)
+);
+
+rxjs.fromEvent(setAtTimeButton, "click").subscribe(
+    () => {
+        const text = textInput.value;
+        if (textValidation(text).isValid) {
+			const hours = timeHours.options[timeHours.selectedIndex].value;
+			const minutes = timeMinutes.options[timeMinutes.selectedIndex].value;
+			const am = timeAmToggle.innerText;
+            addNotification(text, {hours, minutes, am})
+        }
+    }
+);
+
+const timerEach5Mins$ = 
+    rxjs.interval(1000)
+    .pipe(
+        rxjs.map(() => {
+            const displayRegulal = () => {
+                if (getDisplayMode() === TIME_MODE) {
+                    console.log("regular, time");
+                    return {mode: TIME_MODE, time: getCurrentTimeRounded()}
+                } else {
+                    console.log("regular, nop");
+                    return {}
+                }
+            };
+            const nextNotification = getNotification();
+            if (typeof nextNotification === "undefined") {
+                return displayRegulal();
+            } else {
+                setDisplayMode(TEXT_MODE);
+                console.log("new note!");
+                return {mode: TEXT_MODE, text: nextNotification}
+            }
+        })
+    );
+
+const setNow$ = 
+    rxjs.fromEvent(setNowButton, "click")
+    .pipe(
+        rxjs.map(() => textInput.value),
+        rxjs.filter(text => textValidation(text).isValid),
+        rxjs.map(text => {
+            setDisplayMode(TEXT_MODE);
+            return {mode: TEXT_MODE, text: text}
+        })
+    );
 
 drawStaticParts(clocks);
 // drawRow(clocks, 0, ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "&"]);
@@ -343,9 +315,6 @@ drawStaticParts(clocks);
 const matrix = generateTimeLettersMatrix(clocks.n);
 matrix.forEach((line, i) => {
     drawRow(clocks, i, line)
-});
-time2lights(n, {hours:"12", minutes:"00", am:"AM"}).forEach((line, i) => {
-    setRowLights(clocks, i, line);
 });
 
 rxjs.merge(timerEach5Mins$, setNow$)
@@ -364,52 +333,8 @@ rxjs.merge(timerEach5Mins$, setNow$)
     .subscribe(
         x => {
             console.log(x);
-            time2lights(n, x.time).forEach((line, i) => {
+            time2lights(clocks.n, x.time).forEach((line, i) => {
                 setRowLights(clocks, i, line);
             })
         }
     );
-
-
-// function time2text(time) {
-//     const hours2text = (h) => {
-//         switch (h) {
-//             case 1: return ["one"]
-//             case 2: return ["two"]
-//             case 3: return ["three"]
-//             case 4: return ["four"]
-//             case 5: return ["five"]
-//             case 6: return ["six"]
-//             case 7: return ["seven"]
-//             case 8: return ["eight"]
-//             case 9: return ["nine"]
-//             case 10: return ["ten"]
-//             case 11: return ["eleven"]
-//             case 12: return ["twelve"]
-//         }
-//     };
-//     const minutes2text = (m) => {
-//         switch (m) {
-//             case o: return hours2text.concat()
-//             case 2: return "two"
-//             case 3: return "three"
-//             case 4: return "four"
-//             case 5: return "five"
-//             case 6: return "six"
-//             case 7: return "seven"
-//             case 8: return "eight"
-//             case 9: return "nine"
-//             case 10: return "ten"
-//             case 11: return "eleven"
-//             case 12: return "twelve"
-//         }
-//     }
-//     const hours = time.hours;
-//     const minutes = time.minutes;
-//     const am = time.am;
-//     const result = ["it", "is"];
-//     switch (minutes) {
-//         case 0: result.concat
-
-//     }
-// }
