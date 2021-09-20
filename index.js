@@ -115,6 +115,49 @@ function time2lights(n, time) {
     ]
 }
 
+function generateTextLettersMatrixAndLights(n, text) {
+	const words = text.split(" ");
+	const linesAndlights = words.map((word) => {
+		const l = word.length;
+		const freeSpace = n - l - 1;
+		const offset = Math.ceil(Math.random() * freeSpace);
+		const lights = [];
+		const line = Array(n).fill()
+			.map((_, i) => {
+				if (i < offset || i > offset + l - 1) {
+					return getRandomSymbol()
+				} else {
+					lights.push(i);
+					return word.charAt(i - offset);
+				}
+			});
+		return {line, lights}
+	});
+	const blankLine = () => Array(n).fill().map((_) => getRandomSymbol());
+	let linesIdx = 0;
+	const lights = Array(n).fill([]);
+	const matrix = (
+		Array(n).fill()
+			.map((_, i) => {
+				const llines = linesAndlights.length;
+				const getLine = () => {
+					if (linesIdx < llines) {
+						lights[i] = linesAndlights[linesIdx].lights;
+						return linesAndlights[linesIdx++].line;
+					} else {
+						return blankLine();
+					}
+				}
+				if (N - i > llines) {
+					return Math.random() > 0.5 ? getLine() : blankLine();
+				} else {
+					return getLine();
+				}
+			})
+	);
+	return {matrix, lights};
+  }
+
 function setupClocks(id, n) {
     return {
         clocks: document.getElementById(id),
@@ -165,18 +208,18 @@ function drawRow(clocks, y, letters) {
 function drawCell(clocks, x, y, letter) {
 	// These charachters are ugly in the selected font so we use another font for them
 	// That requires another alignment and font-size
-    const symbols = ["?", "!", "'"];
-    const isSymbol = symbols.includes(letter);
+    const specialChars = ["?", "!", "'"];
+    const isSpecialChar = specialChars.includes(letter);
 	const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
 
 	const idx2px = (idx) => (idx * 2 * clocks.pxPerCell) + (clocks.pxPerCell * 1.5);
     const xpx = idx2px(x);
-    const ypx = idx2px(y) + (isSymbol ? 5 : 0);
+    const ypx = idx2px(y) + (isSpecialChar ? 5 : 0);
     text.setAttribute("x", xpx);
     text.setAttribute("y", ypx);
     text.setAttribute("id", coords2id(x, y));
     text.textContent = letter;
-    if (isSymbol) {
+    if (isSpecialChar) {
         text.setAttribute("font-size", 15);
         text.setAttribute("class", "symbol");
     }
@@ -279,7 +322,7 @@ const timerEach5Mins$ =
                     return {mode: TIME_MODE, time: getCurrentTimeRounded()}
                 } else {
                     console.log("regular, nop");
-                    return {}
+                    return {mode: TEXT_MODE, text: ""} //
                 }
             };
             const nextNotification = getNotification();
@@ -320,21 +363,35 @@ matrix.forEach((line, i) => {
 rxjs.merge(timerEach5Mins$, setNow$)
     .pipe(
         rxjs.distinctUntilChanged((previous, current) => {
-            const ptime = previous.time;
-            const ctime = current.time;
-            return (
-                previous.mode === current.mode
-                && ptime.hours === ctime.hours
-                && ptime.minutes === ctime.minutes
-                && ptime.am === ctime.am
-            )
+			const pmode = previous.mode;
+			const cmode = current.mode;
+			if (pmode !== cmode) {
+				return false
+			} else if (pmode === TIME_MODE) {
+				const ptime = previous.time;
+            	const ctime = current.time;
+				return ptime.hours === ctime.hours
+						&& ptime.minutes === ctime.minutes
+						&& ptime.am === ctime.am
+			} else {
+				return previous.text === current.text
+			}
         })
     )
     .subscribe(
         x => {
             console.log(x);
-            time2lights(clocks.n, x.time).forEach((line, i) => {
-                setRowLights(clocks, i, line);
-            })
+			if (getDisplayMode() === TIME_MODE) {
+				time2lights(clocks.n, x.time).forEach((line, i) => {
+					setRowLights(clocks, i, line);
+				})
+			} else {
+				console.log("happened!");
+				if (x.text !== "") {
+					const matrixAndLights = generateTextLettersMatrixAndLights(clocks.n, x.text);
+					matrixAndLights.matrix.forEach((line, i) => drawRow(clocks, i, line));
+					matrixAndLights.lights.forEach((line, i) => setRowLights(clocks, i, line));
+				}
+			}
         }
     );
