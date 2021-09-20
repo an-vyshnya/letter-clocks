@@ -119,18 +119,14 @@ option {
 }
 
 #controls {
-    flex : 2;
+    flex-basis: 15%;
     justify-content: space-between;
     padding-bottom: 1rem;
 }
 
 #clocks-container {
-    flex-basis: 80%;
-    justify-content: space-evenly;
-}
-
-.snihy {
-    background-color: turquoise;
+    justify-content: space-between;
+    padding-top: 1rem;
 }
 
 /* SVG */
