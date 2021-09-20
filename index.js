@@ -1,8 +1,7 @@
 //
-// Utils
+// Time helpers
 //
 
-// Time helpers
 function date2hoursMinutesAm(date) {
     const hours = date.getHours();
     const minutes = date.getMinutes();
@@ -32,18 +31,64 @@ function getCurrentTimeRounded() {
     return roundTimeMinutes(date2hoursMinutesAm(now))
 }
 
-// Validation helpers
-function textValidation(text) {
-    if (text.length > 10) {
+//
+// Text input processing
+//
+
+function fullTextValidation(n, text) {
+    const words = text.split(" ").filter((word) => word !== "");
+    if (words.length > n) {
         return {
             isValid: false,
-            errorMessage: "Your text is too long"
-        }
-    } else {
-        return {
-            isValid: true
+            errorMessage: `Too many words, ${n} is the limit`
         }
     }
+    const errors = words
+        .map((word, i) => word.length > n ? i : -1)
+        .filter((idx) => idx != -1);
+    if (errors.length !== 0) {
+        const isPlural = errors.length > 1;
+        const numbers = errors
+            .map((e) => (e + 1))
+            .join(", ");
+        const errorMessage = [
+            isPlural ? "Words" : "Word",
+            numbers,
+            isPlural ? "are" : "is",
+            `too long, ${n} letters is the limit`
+        ].join(" ");
+        return {
+            isValid: false,
+            errorMessage: errorMessage
+        }
+    } else {
+        return {isValid: true}
+    }
+}
+
+// Remove all forbidden characters and capitalize
+function incrementalValidation(text) {
+    return text
+        .split('')
+        .filter((char) => char === " " || getAllowedSymbols().includes(char.toLowerCase()))
+        .join('')
+        .toUpperCase();
+}
+
+// Convert any text into a valid one in case user ignores warnings
+function cleanUpText(n, text) {
+    return text
+        .toLowerCase()
+        .split(" ")
+        .slice(0, n)
+        .map(word => {
+            return word
+                .slice(0, n)
+                .split('')
+                .filter(char => getAllowedSymbols().includes(char))
+                .join('')
+        })
+        .join(" ");
 }
 
 //
@@ -273,8 +318,9 @@ const N = 11;
 const clocks = setupClocks("clocks", N);
 
 rxjs.fromEvent(textInput, "input").subscribe(
-    () => {
-        const validation = textValidation(textInput.value);
+    (value) => {
+        textInput.value = incrementalValidation(textInput.value);
+        const validation = fullTextValidation(N, textInput.value);
         if (validation.isValid) {
             textInput.setCustomValidity("");
             textInputError.classList.add("invisible");
@@ -302,13 +348,11 @@ rxjs.fromEvent(dismissButton, "click").subscribe(
 
 rxjs.fromEvent(setAtTimeButton, "click").subscribe(
     () => {
-        const text = textInput.value;
-        if (textValidation(text).isValid) {
-			const hours = timeHours.options[timeHours.selectedIndex].value;
-			const minutes = timeMinutes.options[timeMinutes.selectedIndex].value;
-			const am = timeAmToggle.innerText;
-            addNotification(text, {hours, minutes, am})
-        }
+        const text = cleanUpText(textInput.value);
+        const hours = timeHours.options[timeHours.selectedIndex].value;
+        const minutes = timeMinutes.options[timeMinutes.selectedIndex].value;
+        const am = timeAmToggle.innerText;
+        addNotification(text, {hours, minutes, am})
     }
 );
 
@@ -339,8 +383,7 @@ const timerEach5Mins$ =
 const setNow$ = 
     rxjs.fromEvent(setNowButton, "click")
     .pipe(
-        rxjs.map(() => textInput.value),
-        rxjs.filter(text => textValidation(text).isValid),
+        rxjs.map(() => cleanUpText(N, textInput.value)),
         rxjs.map(text => {
             setDisplayMode(TEXT_MODE);
             return {mode: TEXT_MODE, text: text}
@@ -386,7 +429,6 @@ rxjs.merge(timerEach5Mins$, setNow$)
 					setRowLights(clocks, i, line);
 				})
 			} else {
-				console.log("happened!");
 				if (x.text !== "") {
 					const matrixAndLights = generateTextLettersMatrixAndLights(clocks.n, x.text);
 					matrixAndLights.matrix.forEach((line, i) => drawRow(clocks, i, line));
