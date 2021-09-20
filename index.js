@@ -238,6 +238,20 @@ function setRowLights(clocks, y, positions) {
         });
 }
 
+function turnOffLights(clocks) {
+    Array(clocks.n).fill()
+        .forEach((_, y) => {
+            Array(clocks.n).fill()
+            .map((_, i) => coords2id(i, y))
+            .forEach(id => {
+                const element = document.getElementById(id);
+                if (element !== null) {
+                    element.classList.remove("lightOn");
+                }
+            });
+        });
+}
+
 function drawRow(clocks, y, letters) {
     Array(clocks.n).fill()
         .map((_, i) => coords2id(i, y))
@@ -391,17 +405,7 @@ const setNow$ =
     );
 
 drawStaticParts(clocks);
-// drawRow(clocks, 0, ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "&"]);
-// drawRow(clocks, 1, ["k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "%"]);
-// drawRow(clocks, 2, ["u", "v", "w", "x", "y", "z", "?", "!", "-", "'", "#"]);
-// setTimeout(() => drawRow(clocks, 0, ["u", "v", "w", "x", "y", "z", "?", "!", "-", "'", "*"]), 1000);
-// setRowLights(clocks, 1, [1, 3, 5, 7]);
-// setTimeout(() => setRowLights(clocks, 1, []), 1000);
-// setTimeout(() => setRowLights(clocks, 0, [1, 2, 3, 4]), 2000);
-const matrix = generateTimeLettersMatrix(clocks.n);
-matrix.forEach((line, i) => {
-    drawRow(clocks, i, line)
-});
+generateTimeLettersMatrix(clocks.n).forEach((line, i) => drawRow(clocks, i, line));
 
 rxjs.merge(timerEach5Mins$, setNow$)
     .pipe(
@@ -431,8 +435,13 @@ rxjs.merge(timerEach5Mins$, setNow$)
 			} else {
 				if (x.text !== "") {
 					const matrixAndLights = generateTextLettersMatrixAndLights(clocks.n, x.text);
-					matrixAndLights.matrix.forEach((line, i) => drawRow(clocks, i, line));
-					matrixAndLights.lights.forEach((line, i) => setRowLights(clocks, i, line));
+                    turnOffLights(clocks);
+                    setTimeout(() => {
+                        matrixAndLights.matrix.forEach((line, i) => drawRow(clocks, i, line));
+                        setTimeout(() => {
+					        matrixAndLights.lights.forEach((line, i) => setRowLights(clocks, i, line));
+                        }, 1000)
+                    }, 1000)
 				}
 			}
         }
