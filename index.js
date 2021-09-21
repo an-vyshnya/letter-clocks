@@ -104,32 +104,43 @@ function getRandomSymbol() {
     return (allowedSymbols[Math.ceil(Math.random() * (allowedSymbols.length - 1))])
 }
 
+function getRandomLine(n) {
+	return Array(n).fill().map((_) => getRandomSymbol());
+}
+
 function coords2id(x, y) {
 	// To encode x and y in string id, format doesn't matter
     return x + ":" + y
 }
 
-// Predefined time matrix operations
 function generateTimeLettersMatrix(n) {
-    const template = [
-        ["i", "t", "_", "i", "s", "_", "a", "m", "_", "p", "m"],
-        ["a", "_", "_", "q", "u", "a", "t", "e", "r", "_", "_"],
-        ["t", "w", "e", "n", "t", "y", "_", "f", "i", "v", "e"],
-        ["h", "a", "l", "f", "_", "t", "e", "n", "_", "t", "o"],
-        ["p", "a", "s", "t", "_", "_", "n", "i", "n", "e", "_"],
-        ["o", "n", "e", "_", "_", "t", "w", "o", "_", "_", "_"],
-        ["_", "s", "i", "x", "_", "t", "h", "r", "e", "e", "_"],
-        ["f", "o", "u", "r", "_", "f", "i", "v", "e", "_", "_"],
-        ["e", "i", "g", "h", "t", "e", "l", "e", "v", "e", "n"],
-        ["s", "e", "v", "e", "n", "t", "w", "e", "l", "v", "e"],
-        ["t", "e", "n", "_", "o", "'", "c", "l", "o", "c", "k"]
-    ];
-    return template.map((line) => {
-        return line.map(symbol => symbol === "_" ? getRandomSymbol() : symbol)
-    })
+	// Simply append extra symblos to predfined template
+	const generateExtraSymbols = () => Array(n - 11).fill().map(_ => getRandomSymbol());
+    const template = 
+		[
+			["i", "t", "_", "i", "s", "_", "a", "m", "_", "p", "m"],
+			["a", "_", "_", "q", "u", "a", "t", "e", "r", "_", "_"],
+			["t", "w", "e", "n", "t", "y", "_", "f", "i", "v", "e"],
+			["h", "a", "l", "f", "_", "t", "e", "n", "_", "t", "o"],
+			["p", "a", "s", "t", "_", "_", "n", "i", "n", "e", "_"],
+			["o", "n", "e", "_", "_", "t", "w", "o", "_", "_", "_"],
+			["_", "s", "i", "x", "_", "t", "h", "r", "e", "e", "_"],
+			["f", "o", "u", "r", "_", "f", "i", "v", "e", "_", "_"],
+			["e", "i", "g", "h", "t", "e", "l", "e", "v", "e", "n"],
+			["s", "e", "v", "e", "n", "t", "w", "e", "l", "v", "e"],
+			["t", "e", "n", "_", "o", "'", "c", "l", "o", "c", "k"]
+		]
+		.map(line => {
+			return line
+				.map(symbol => symbol === "_" ? getRandomSymbol() : symbol)
+				.concat(generateExtraSymbols())
+		})
+		.concat(Array(n - 11).fill().map(_ => getRandomLine(n)));
+	return template
 }
 
 function time2lights(n, time) {
+	// Totally based on template in order not to implement clever search
     const hours = time.hours;
     const minutes = time.minutes;
     const am = time.am;
@@ -178,7 +189,6 @@ function generateTextLettersMatrixAndLights(n, text) {
 			});
 		return {line, lights}
 	});
-	const blankLine = () => Array(n).fill().map((_) => getRandomSymbol());
 	let linesIdx = 0;
 	const lights = Array(n).fill([]);
 	const matrix = (
@@ -190,11 +200,11 @@ function generateTextLettersMatrixAndLights(n, text) {
 						lights[i] = linesAndlights[linesIdx].lights;
 						return linesAndlights[linesIdx++].line;
 					} else {
-						return blankLine();
+						return getRandomLine(n);
 					}
 				}
 				if (N - i > llines) {
-					return Math.random() > 0.5 ? getLine() : blankLine();
+					return Math.random() > 0.5 ? getLine() : getRandomLine(n);
 				} else {
 					return getLine();
 				}
@@ -429,7 +439,7 @@ rxjs.merge(timer$, dismiss$)
 					// Extra delay to have time for a backgroung change
 					() => setTimeout(() => matrixAndLights.lights.forEach((line, i) => setRowLights(clocks, i, line), updatesDelayMs))
 				])
-			} else if (changeValue.type === CHANGE_TO_TIME) {
+			} else if (changeValue.type === CHANGE_TO_TIME && getDisplayMode() === TEXT_MODE) {
 				setDisplayMode(TIME_MODE);
                 turnOffLights(clocks);
 				return rxjs.from([
