@@ -91,12 +91,6 @@ function cleanUpText(n, text) {
         .join(" ");
 }
 
-// Uniform delays for all visual events
-function delay(fn) {
-    const delayMs = 1000;
-    setTimeout(fn, delayMs)
-}
-
 //
 // Letter matrix generation functions
 //
@@ -321,6 +315,11 @@ function getNotification() {
     return notification;
 }
 
+// Changes indicators
+const NO_CHANGE = 0;
+const CHANGE_TO_TIME = 1;
+const CHANGE_TO_TEXT = 2;
+
 const textInput = document.getElementById("text-input");
 const textInputError = document.getElementById("text-input-error-message");
 const timeHours = document.getElementById("time-hours");
@@ -332,8 +331,9 @@ const dismissButton = document.getElementById("dismiss-button");
 
 // Number of elements in row/column. 11 is minimum, otherwise time phrases don't fit
 const N = 11;
-
 const clocks = setupClocks("clocks", N);
+// Less than a second, so that updates don't overlap
+const updatesDelayMs = 900;
 
 drawStaticParts(clocks);
 const timeMatrix = generateTimeLettersMatrix(clocks.n);
@@ -381,70 +381,70 @@ rxjs.fromEvent(setAtTimeButton, "click").subscribe(
     }
 );
 
-const NO_CHANGE = 0;
-const CHANGE_TO_TIME = 1;
-const CHANGE_TO_TEXT = 2;
-
 const timer$ = rxjs.interval(1000)
     .pipe(
         rxjs.map(value => {
             const nextNotification = getNotification();
             if (typeof nextNotification === "undefined") {
                 return {
-                    change: NO_CHANGE, 
+                    type: NO_CHANGE, 
                     trigger: value
                 }
             } 
             return {
-                change: CHANGE_TO_TEXT,
+                type: CHANGE_TO_TEXT,
                 text: nextNotification
             }
         })
     );
 
-const dis$ = rxjs.fromEvent(dismissButton, "click")
+const dismiss$ = rxjs.fromEvent(dismissButton, "click")
     .pipe(
         rxjs.map(() => {
-            return {change: CHANGE_TO_TIME}
+            return {type: CHANGE_TO_TIME}
         })
     );
 
-rxjs.merge(timer$, dis$)
+rxjs.merge(timer$, dismiss$)
     .pipe(
         rxjs.distinctUntilChanged((previous, current) => {
-            const pchange = previous.change;
-            if (pchange !== current.change) return false
+            const pchange = previous.type;
+            if (pchange !== current.type) return false
             if (pchange === CHANGE_TO_TEXT) {
                 return previous.text === current.text
             }
             if (pchange === NO_CHANGE) {
                 return previous.trigger === current.trigger
             }
-        })
+        }),
+		rxjs.map(changeValue => {
+			// Emit observable with a sequence of actions, depending on current mode
+			// Actions will be delayed to make transitions smooth
+			if (changeValue.type === CHANGE_TO_TEXT) {
+				setDisplayMode(TEXT_MODE);
+                const matrixAndLights = generateTextLettersMatrixAndLights(clocks.n, changeValue.text);
+                turnOffLights(clocks);
+				return rxjs.from([
+					() => matrixAndLights.matrix.forEach((line, i) => drawRow(clocks, i, line)),
+					// Extra delay to have time for a backgroung change
+					() => setTimeout(() => matrixAndLights.lights.forEach((line, i) => setRowLights(clocks, i, line), updatesDelayMs))
+				])
+			} else if (changeValue.type === CHANGE_TO_TIME) {
+				setDisplayMode(TIME_MODE);
+                turnOffLights(clocks);
+				return rxjs.from([
+					() => timeMatrix.forEach((line, i) => drawRow(clocks, i, line))
+				])
+			} else if (getDisplayMode() === TIME_MODE) {
+				return rxjs.from([
+					() => time2lights(clocks.n, getCurrentTimeRounded()).forEach((line, i) => {
+						setRowLights(clocks, i, line);
+					})
+				])
+			}
+			return rxjs.empty()
+		}),
+		rxjs.concatAll(),
+		rxjs.delay(updatesDelayMs)
     )
-    .subscribe(
-        x => {
-            console.log(x);
-            if (x.change === CHANGE_TO_TEXT) {
-                setDisplayMode(TEXT_MODE);
-                const matrixAndLights = generateTextLettersMatrixAndLights(clocks.n, x.text);
-                turnOffLights(clocks);
-                delay(() => {
-                    matrixAndLights.matrix.forEach((line, i) => drawRow(clocks, i, line));
-                    delay(() => {
-                        matrixAndLights.lights.forEach((line, i) => setRowLights(clocks, i, line));
-                    })
-                })
-            } else if (x.change === CHANGE_TO_TIME) {
-                setDisplayMode(TIME_MODE);
-                turnOffLights(clocks);
-                timeMatrix.forEach((line, i) => drawRow(clocks, i, line));
-            } else {
-                if (getDisplayMode() === TIME_MODE) {
-                    time2lights(clocks.n, getCurrentTimeRounded()).forEach((line, i) => {
-                        setRowLights(clocks, i, line);
-                    })
-                }
-            }
-        }
-    );
+    .subscribe(action => action());
