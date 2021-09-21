@@ -151,7 +151,7 @@ svg > text {
     text-anchor: middle;
     fill: var(--svg-text-off-color);
     transition-duration: 1s;
-    transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+    transition-timing-function: cubic-bezier(0.33, 1, 0.68, 1);
 }
 
 svg > text.symbol {

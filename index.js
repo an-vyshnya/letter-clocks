@@ -91,6 +91,12 @@ function cleanUpText(n, text) {
         .join(" ");
 }
 
+// Uniform delays for all visual events
+function delay(fn) {
+    const delayMs = 1000;
+    setTimeout(fn, delayMs)
+}
+
 //
 // Letter matrix generation functions
 //
@@ -327,10 +333,14 @@ const N = 11;
 
 const clocks = setupClocks("clocks", N);
 
+drawStaticParts(clocks);
+const timeMatrix = generateTimeLettersMatrix(clocks.n);
+timeMatrix.forEach((line, i) => drawRow(clocks, i, line));
+
 rxjs.fromEvent(textInput, "input").subscribe(
     (value) => {
         textInput.value = incrementalValidation(textInput.value);
-        const validation = fullTextValidation(N, textInput.value);
+        const validation = fullTextValidation(clocks.n, textInput.value);
         if (validation.isValid) {
             textInput.setCustomValidity("");
             textInputError.classList.add("invisible");
@@ -352,13 +362,9 @@ rxjs.fromEvent(timeAmToggle, "click").subscribe(
     }
 );
 
-rxjs.fromEvent(dismissButton, "click").subscribe(
-    () => setDisplayMode(TIME_MODE)
-);
-
 rxjs.fromEvent(setAtTimeButton, "click").subscribe(
     () => {
-        const text = cleanUpText(textInput.value);
+        const text = cleanUpText(clocks.n, textInput.value);
         const hours = timeHours.options[timeHours.selectedIndex].value;
         const minutes = timeMinutes.options[timeMinutes.selectedIndex].value;
         const am = timeAmToggle.innerText;
@@ -366,17 +372,24 @@ rxjs.fromEvent(setAtTimeButton, "click").subscribe(
     }
 );
 
+const dismiss$ = 
+    rxjs.fromEvent(dismissButton, "click")
+    .pipe(
+        rxjs.map(() => {
+            setDisplayMode(TIME_MODE);
+            return {mode: TIME_MODE}
+        })
+    );
+
 const timerEach5Mins$ = 
     rxjs.interval(1000)
     .pipe(
         rxjs.map(() => {
             const displayRegulal = () => {
                 if (getDisplayMode() === TIME_MODE) {
-                    console.log("regular, time");
-                    return {mode: TIME_MODE, time: getCurrentTimeRounded()}
+                    return {mode: TIME_MODE}
                 } else {
-                    console.log("regular, nop");
-                    return {mode: TEXT_MODE, text: ""} //
+                    return {mode: TEXT_MODE, text: ""}
                 }
             };
             const nextNotification = getNotification();
@@ -384,7 +397,6 @@ const timerEach5Mins$ =
                 return displayRegulal();
             } else {
                 setDisplayMode(TEXT_MODE);
-                console.log("new note!");
                 return {mode: TEXT_MODE, text: nextNotification}
             }
         })
@@ -393,31 +405,24 @@ const timerEach5Mins$ =
 const setNow$ = 
     rxjs.fromEvent(setNowButton, "click")
     .pipe(
-        rxjs.map(() => cleanUpText(N, textInput.value)),
+        rxjs.map(() => cleanUpText(clocks.n, textInput.value)),
         rxjs.map(text => {
             setDisplayMode(TEXT_MODE);
             return {mode: TEXT_MODE, text: text}
         })
     );
 
-drawStaticParts(clocks);
-generateTimeLettersMatrix(clocks.n).forEach((line, i) => drawRow(clocks, i, line));
-
-rxjs.merge(timerEach5Mins$, setNow$)
+rxjs.merge(timerEach5Mins$, setNow$, dismiss$)
     .pipe(
         rxjs.distinctUntilChanged((previous, current) => {
 			const pmode = previous.mode;
 			const cmode = current.mode;
 			if (pmode !== cmode) {
 				return false
-			} else if (pmode === TIME_MODE) {
-				const ptime = previous.time;
-            	const ctime = current.time;
-				return ptime.hours === ctime.hours
-						&& ptime.minutes === ctime.minutes
-						&& ptime.am === ctime.am
+			} else if (pmode === TEXT_MODE) {
+                return previous.text === current.text
 			} else {
-				return previous.text === current.text
+				return true
 			}
         })
     )
@@ -425,19 +430,19 @@ rxjs.merge(timerEach5Mins$, setNow$)
         x => {
             console.log(x);
 			if (getDisplayMode() === TIME_MODE) {
-				time2lights(clocks.n, x.time).forEach((line, i) => {
+				time2lights(clocks.n, getCurrentTimeRounded()).forEach((line, i) => {
 					setRowLights(clocks, i, line);
 				})
 			} else {
 				if (x.text !== "") {
 					const matrixAndLights = generateTextLettersMatrixAndLights(clocks.n, x.text);
                     turnOffLights(clocks);
-                    setTimeout(() => {
+                    delay(() => {
                         matrixAndLights.matrix.forEach((line, i) => drawRow(clocks, i, line));
-                        setTimeout(() => {
+                        delay(() => {
 					        matrixAndLights.lights.forEach((line, i) => setRowLights(clocks, i, line));
-                        }, 1000)
-                    }, 1000)
+                        })
+                    })
 				}
 			}
         }
