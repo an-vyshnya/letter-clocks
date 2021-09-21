@@ -351,7 +351,11 @@ timeMatrix.forEach((line, i) => drawRow(clocks, i, line));
 
 rxjs.fromEvent(textInput, "input").subscribe(
     (value) => {
-        textInput.value = incrementalValidation(textInput.value);
+        const dirtyValue = textInput.value;
+        const cleanValue = incrementalValidation(dirtyValue);
+        const newCaretPosition = textInput.selectionStart - (dirtyValue.length - cleanValue.length);
+        textInput.value = cleanValue;
+        textInput.setSelectionRange(newCaretPosition, newCaretPosition);
         const validation = fullTextValidation(clocks.n, textInput.value);
         if (validation.isValid) {
             textInput.setCustomValidity("");
