@@ -214,13 +214,9 @@ function setupClocks(id, n) {
 function drawStaticParts(clocks) {
     const viewBoxWidth = clocks.pxPerCell * (clocks.n * 2 + 1);
     clocks.clocks.setAttribute("viewBox", `0 0 ${viewBoxWidth} ${viewBoxWidth}`);
-    const backgroundRect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-    backgroundRect.setAttribute("x", 0);
-    backgroundRect.setAttribute("y", 0);
+    backgroundRect = document.querySelector("svg > rect");
     backgroundRect.setAttribute("width", viewBoxWidth);
     backgroundRect.setAttribute("height", viewBoxWidth);
-    backgroundRect.setAttribute("fill", 0x000000);
-    clocks.clocks.appendChild(backgroundRect);
 }
 
 function setRowLights(clocks, y, positions) {

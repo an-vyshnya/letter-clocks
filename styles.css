@@ -7,13 +7,19 @@
 
     --svg-text-off-color: #302E38;
     --svg-text-on-color: #F4F4F6;
+    --svg-background-color: #141216;
 }
 
 html, body {
     height: 100%;
     margin: 0;
+    font-family: 'Roboto', sans-serif;
+}
+
+body {
     background-color: var(--background-color);
-    font-family: Tahoma, sans-serif;
+    background-image: url("background.jpg");
+    background-size: cover;
 }
 
 main {
@@ -36,16 +42,16 @@ input[type=text] {
     padding: 4px;
     color: var(--primary-text-color);
     outline: none;
+    font-family: 'Roboto', sans-serif;
     transition-duration: 0.3s;
 }
 
 input[type=text]:focus {
-    background-color: rgba(0, 0, 0, 0.1);
+    background-color: rgba(0, 0, 0, 0.2);
 }
 
 input[type=text]:invalid {
     border-color: var(--error-color);
-    color: var(--error-color);
 }
 
 ::placeholder {
@@ -59,6 +65,7 @@ select {
     padding: 4px;
     color: var(--primary-text-color);
     outline: none;
+    font-family: 'Roboto', sans-serif;
 }
 
 /* For Firefox, to make options readable */
@@ -72,7 +79,7 @@ option {
 
 .error-message {
     font-size: smaller;
-    color: var(--error-color);
+    color: var(--primary-text-color);
 }
 
 .centered {
@@ -87,6 +94,7 @@ option {
     border: 1px solid var(--border-color);
     border-radius: 4px;
     padding: 4px;
+    font-family: 'Roboto', sans-serif;
     color: var(--primary-text-color);
     transition-duration: 0.3s;
 }
@@ -107,6 +115,7 @@ option {
     border-radius: 4px;
     color: var(--primary-text-color);
     outline: none;
+    font-family: 'Roboto', sans-serif;
     /* selects by default have 1px larger padding than buttons,
        this is to align with them */
     padding: 5px;
@@ -130,6 +139,10 @@ option {
 }
 
 /* SVG */
+
+svg > rect {
+    fill: var(--svg-background-color)
+}
 
 svg > text {
     font-family: 'Major Mono Display', monospace;
