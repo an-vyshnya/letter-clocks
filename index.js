@@ -22,7 +22,7 @@ function roundTimeMinutes(time) {
 }
 
 function time2string(time) {
-	// To encode time in a string key, format doesn't matter 
+    // To encode time in a string key, format doesn't matter 
     return time.hours + ":" + time.minutes + "." + time.am
 }
 
@@ -96,51 +96,51 @@ function cleanUpText(n, text) {
 //
 
 function getAllowedSymbols() {
-	return "abcdefghijklmnopqrstuvwxyz?!&%#$2+-'<>1234567890";
+    return "abcdefghijklmnopqrstuvwxyz?!&%#$2+-'<>1234567890";
 }
 
 function getRandomSymbol() {
-	const allowedSymbols = getAllowedSymbols();
+    const allowedSymbols = getAllowedSymbols();
     return (allowedSymbols[Math.ceil(Math.random() * (allowedSymbols.length - 1))])
 }
 
 function getRandomLine(n) {
-	return Array(n).fill().map((_) => getRandomSymbol());
+    return Array(n).fill().map((_) => getRandomSymbol());
 }
 
 function coords2id(x, y) {
-	// To encode x and y in string id, format doesn't matter
+    // To encode x and y in string id, format doesn't matter
     return x + ":" + y
 }
 
 function generateTimeLettersMatrix(n) {
-	// Simply append extra symblos to predfined template
-	const generateExtraSymbols = () => Array(n - 11).fill().map(_ => getRandomSymbol());
+    // Simply append extra symblos to predfined template
+    const generateExtraSymbols = () => Array(n - 11).fill().map(_ => getRandomSymbol());
     const template = 
-		[
-			["i", "t", "_", "i", "s", "_", "a", "m", "_", "p", "m"],
-			["a", "_", "_", "q", "u", "a", "t", "e", "r", "_", "_"],
-			["t", "w", "e", "n", "t", "y", "_", "f", "i", "v", "e"],
-			["h", "a", "l", "f", "_", "t", "e", "n", "_", "t", "o"],
-			["p", "a", "s", "t", "_", "_", "n", "i", "n", "e", "_"],
-			["o", "n", "e", "_", "_", "t", "w", "o", "_", "_", "_"],
-			["_", "s", "i", "x", "_", "t", "h", "r", "e", "e", "_"],
-			["f", "o", "u", "r", "_", "f", "i", "v", "e", "_", "_"],
-			["e", "i", "g", "h", "t", "e", "l", "e", "v", "e", "n"],
-			["s", "e", "v", "e", "n", "t", "w", "e", "l", "v", "e"],
-			["t", "e", "n", "_", "o", "'", "c", "l", "o", "c", "k"]
-		]
-		.map(line => {
-			return line
-				.map(symbol => symbol === "_" ? getRandomSymbol() : symbol)
-				.concat(generateExtraSymbols())
-		})
-		.concat(Array(n - 11).fill().map(_ => getRandomLine(n)));
-	return template
+        [
+            ["i", "t", "_", "i", "s", "_", "a", "m", "_", "p", "m"],
+            ["a", "_", "_", "q", "u", "a", "t", "e", "r", "_", "_"],
+            ["t", "w", "e", "n", "t", "y", "_", "f", "i", "v", "e"],
+            ["h", "a", "l", "f", "_", "t", "e", "n", "_", "t", "o"],
+            ["p", "a", "s", "t", "_", "_", "n", "i", "n", "e", "_"],
+            ["o", "n", "e", "_", "_", "t", "w", "o", "_", "_", "_"],
+            ["_", "s", "i", "x", "_", "t", "h", "r", "e", "e", "_"],
+            ["f", "o", "u", "r", "_", "f", "i", "v", "e", "_", "_"],
+            ["e", "i", "g", "h", "t", "e", "l", "e", "v", "e", "n"],
+            ["s", "e", "v", "e", "n", "t", "w", "e", "l", "v", "e"],
+            ["t", "e", "n", "_", "o", "'", "c", "l", "o", "c", "k"]
+        ]
+        .map(line => {
+            return line
+                .map(symbol => symbol === "_" ? getRandomSymbol() : symbol)
+                .concat(generateExtraSymbols())
+        })
+        .concat(Array(n - 11).fill().map(_ => getRandomLine(n)));
+    return template
 }
 
 function time2lights(n, time) {
-	// Totally based on template in order not to implement clever search
+    // Totally based on template in order not to implement clever search
     const hours = time.hours;
     const minutes = time.minutes;
     const am = time.am;
@@ -155,14 +155,14 @@ function time2lights(n, time) {
     const isTo = [35, 40, 45, 50, 55].includes(minutes);
     const isPast = [5, 10, 15, 20, 25, 30].includes(minutes);
 
-	const isHour = (h) => {
-		if (isTo) {
-			const nextHour = hours % 12 + 1; // If it is 12, next hour is 1, not 13
-			return nextHour === h
-		} else {
-			return hours === h
-		}
-	};
+    const isHour = (h) => {
+        if (isTo) {
+            const nextHour = hours % 12 + 1; // If it is 12, next hour is 1, not 13
+            return nextHour === h
+        } else {
+            return hours === h
+        }
+    };
     return [
         [0, 1, 3, 4].concat(isAm ? [6, 7] : [9, 10]),
         isQuater ? [0, 3, 4, 5, 6, 7, 8] : [],
@@ -179,45 +179,45 @@ function time2lights(n, time) {
 }
 
 function generateTextLettersMatrixAndLights(n, text) {
-	const words = text.split(" ");
-	const linesAndlights = words.map((word) => {
-		const l = word.length;
-		const freeSpace = n - l - 1;
-		const offset = Math.ceil(Math.random() * freeSpace);
-		const lights = [];
-		const line = Array(n).fill()
-			.map((_, i) => {
-				if (i < offset || i > offset + l - 1) {
-					return getRandomSymbol()
-				} else {
-					lights.push(i);
-					return word.charAt(i - offset);
-				}
-			});
-		return {line, lights}
-	});
-	let linesIdx = 0;
-	const lights = Array(n).fill([]);
-	const matrix = (
-		Array(n).fill()
-			.map((_, i) => {
-				const llines = linesAndlights.length;
-				const getLine = () => {
-					if (linesIdx < llines) {
-						lights[i] = linesAndlights[linesIdx].lights;
-						return linesAndlights[linesIdx++].line;
-					} else {
-						return getRandomLine(n);
-					}
-				}
-				if (N - i > llines) {
-					return Math.random() > 0.5 ? getLine() : getRandomLine(n);
-				} else {
-					return getLine();
-				}
-			})
-	);
-	return {matrix, lights};
+    const words = text.split(" ");
+    const linesAndlights = words.map((word) => {
+        const l = word.length;
+        const freeSpace = n - l - 1;
+        const offset = Math.ceil(Math.random() * freeSpace);
+        const lights = [];
+        const line = Array(n).fill()
+            .map((_, i) => {
+                if (i < offset || i > offset + l - 1) {
+                    return getRandomSymbol()
+                } else {
+                    lights.push(i);
+                    return word.charAt(i - offset);
+                }
+            });
+        return {line, lights}
+    });
+    let linesIdx = 0;
+    const lights = Array(n).fill([]);
+    const matrix = (
+        Array(n).fill()
+            .map((_, i) => {
+                const llines = linesAndlights.length;
+                const getLine = () => {
+                    if (linesIdx < llines) {
+                        lights[i] = linesAndlights[linesIdx].lights;
+                        return linesAndlights[linesIdx++].line;
+                    } else {
+                        return getRandomLine(n);
+                    }
+                }
+                if (N - i > llines) {
+                    return Math.random() > 0.5 ? getLine() : getRandomLine(n);
+                } else {
+                    return getLine();
+                }
+            })
+    );
+    return {matrix, lights};
   }
 
 function setupClocks(id, n) {
@@ -278,13 +278,13 @@ function drawRow(clocks, y, letters) {
 }
 
 function drawCell(clocks, x, y, letter) {
-	// These charachters are ugly in the selected font so we use another font for them
-	// That requires another alignment and font-size
+    // These charachters are ugly in the selected font so we use another font for them
+    // That requires another alignment and font-size
     const specialChars = ["?", "!", "'"];
     const isSpecialChar = specialChars.includes(letter);
-	const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
 
-	const idx2px = (idx) => (idx * 2 * clocks.pxPerCell) + (clocks.pxPerCell * 1.5);
+    const idx2px = (idx) => (idx * 2 * clocks.pxPerCell) + (clocks.pxPerCell * 1.5);
     const xpx = idx2px(x);
     const ypx = idx2px(y) + (isSpecialChar ? 5 : 0);
     text.setAttribute("x", xpx);
@@ -438,34 +438,34 @@ rxjs.merge(timer$, dismiss$)
                 return previous.trigger === current.trigger
             }
         }),
-		rxjs.map(changeValue => {
-			// Emit observable with a sequence of actions, depending on current mode
-			// Actions will be delayed to make transitions smooth
-			if (changeValue.type === CHANGE_TO_TEXT) {
-				setDisplayMode(TEXT_MODE);
+        rxjs.map(changeValue => {
+            // Emit observable with a sequence of actions, depending on current mode
+            // Actions will be delayed to make transitions smooth
+            if (changeValue.type === CHANGE_TO_TEXT) {
+                setDisplayMode(TEXT_MODE);
                 const matrixAndLights = generateTextLettersMatrixAndLights(clocks.n, changeValue.text);
                 turnOffLights(clocks);
-				return rxjs.from([
-					() => matrixAndLights.matrix.forEach((line, i) => drawRow(clocks, i, line)),
-					// Extra delay to have time for a backgroung change
-					() => setTimeout(() => matrixAndLights.lights.forEach((line, i) => setRowLights(clocks, i, line), updatesDelayMs))
-				])
-			} else if (changeValue.type === CHANGE_TO_TIME && getDisplayMode() === TEXT_MODE) {
-				setDisplayMode(TIME_MODE);
+                return rxjs.from([
+                    () => matrixAndLights.matrix.forEach((line, i) => drawRow(clocks, i, line)),
+                    // Extra delay to have time for a backgroung change
+                    () => setTimeout(() => matrixAndLights.lights.forEach((line, i) => setRowLights(clocks, i, line), updatesDelayMs))
+                ])
+            } else if (changeValue.type === CHANGE_TO_TIME && getDisplayMode() === TEXT_MODE) {
+                setDisplayMode(TIME_MODE);
                 turnOffLights(clocks);
-				return rxjs.from([
-					() => timeMatrix.forEach((line, i) => drawRow(clocks, i, line))
-				])
-			} else if (getDisplayMode() === TIME_MODE) {
-				return rxjs.from([
-					() => time2lights(clocks.n, getCurrentTimeRounded()).forEach((line, i) => {
-						setRowLights(clocks, i, line);
-					})
-				])
-			}
-			return rxjs.empty()
-		}),
-		rxjs.concatAll(),
-		rxjs.delay(updatesDelayMs)
+                return rxjs.from([
+                    () => timeMatrix.forEach((line, i) => drawRow(clocks, i, line))
+                ])
+            } else if (getDisplayMode() === TIME_MODE) {
+                return rxjs.from([
+                    () => time2lights(clocks.n, getCurrentTimeRounded()).forEach((line, i) => {
+                        setRowLights(clocks, i, line);
+                    })
+                ])
+            }
+            return rxjs.empty()
+        }),
+        rxjs.concatAll(),
+        rxjs.delay(updatesDelayMs)
     )
     .subscribe(action => action());
