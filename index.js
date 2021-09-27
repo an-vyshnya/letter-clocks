@@ -155,7 +155,14 @@ function time2lights(n, time) {
     const isTo = [35, 40, 45, 50, 55].includes(minutes);
     const isPast = [5, 10, 15, 20, 25, 30].includes(minutes);
 
-    const isHour = (h) => isTo ? (hours + 1 === h) : hours === h;
+	const isHour = (h) => {
+		if (isTo) {
+			const nextHour = hours % 12 + 1; // If it is 12, next hour is 1, not 13
+			return nextHour === h
+		} else {
+			return hours === h
+		}
+	};
     return [
         [0, 1, 3, 4].concat(isAm ? [6, 7] : [9, 10]),
         isQuater ? [0, 3, 4, 5, 6, 7, 8] : [],
